@@ -1,0 +1,176 @@
+:host {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 2000; // Asegura que el header esté arriba
+}
+
+.navbar {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 60px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem; // Tamaño ideal para navbar
+  letter-spacing: -0.8px; // Un poco más apretado para look moderno
+  cursor: pointer;
+  user-select: none;
+
+
+
+  .brand-ruth {
+    color: #2563eb; 
+    font-weight: 800; // Máximo grosor
+
+  }
+
+  .brand-servations {
+    color: #2563eb; // Tu azul de marca
+    font-weight: 400; // Grosor delgado/normal
+
+  }
+
+  &:hover {
+    opacity: 0.85; // Feedback sutil al pasar el mouse
+  }
+}
+
+.menu-btn {
+  border: none;
+  background: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #1f2937;
+  padding: 8px;
+}
+
+/* OVERLAY (Capa oscura) */
+.overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 2500;
+}
+
+.overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* SIDEBAR LATERAL (Drawer) */
+nav {
+  position: fixed;
+  top: 0;
+  right: -280px; // Empieza escondido a la derecha
+  width: 280px;
+  height: 100vh;
+  background: white;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+}
+
+nav.open {
+  right: 0; // Se desliza hacia adentro
+}
+
+.nav-header {
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f3f4f6;
+  
+  .nav-title { font-weight: 700; color: #111827; }
+  .close-btn { border: none; background: none; font-size: 20px; cursor: pointer; color: #6b7280; }
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  height: 100%;
+
+  a {
+    padding: 16px 20px;
+    text-decoration: none;
+    color: #4b5563;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background 0.2s;
+
+    &:hover { background: #f9fafb; color: #2563eb; }
+    &.active { background: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; }
+  }
+
+  .spacer { flex-grow: 1; } // Empuja el logout al fondo
+
+  .logout {
+    border: none;
+    border-top: 1px solid #f3f4f6;
+    background: #fff5f5;
+    padding: 20px;
+    text-align: left;
+    color: #ef4444;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    &:hover { background: #fee2e2; }
+  }
+}
+
+/* DESKTOP (Vuelve a ser horizontal) */
+@media(min-width: 768px) {
+  .menu-btn, .overlay, .nav-header {
+    display: none;
+  }
+
+  nav {
+    position: static;
+    width: auto;
+    height: auto;
+    background: transparent;
+    box-shadow: none;
+    display: flex !important;
+    flex-direction: row;
+  }
+
+  .nav-links {
+    flex-direction: row;
+    gap: 8px;
+    padding: 0;
+
+    a {
+      padding: 8px 16px;
+      border-radius: 8px;
+      &.active { border: none; background: #f3f4f6; }
+    }
+
+    .logout {
+      border: none;
+      background: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      width: auto;
+      &:hover { background: #fee2e2; }
+    }
+  }
+}

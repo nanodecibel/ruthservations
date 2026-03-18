@@ -1,0 +1,89 @@
+<div class="consultor-container">
+    <header class="header">
+        <h1>Consultor de Reservas</h1>
+        <p>Auditoría de uso por laboratorio</p>
+    </header>
+
+    <section class="search-panel">
+        <div class="field">
+            <label>Seleccionar Laboratorio</label>
+            <div class="custom-dropdown">
+                <button class="dropdown-trigger" (click)="toggleDropdown()" [class.active]="dropdownOpen">
+                    <span>{{ getSelectedSpaceName() }}</span>
+                    <span class="chevron">▼</span>
+                </button>
+                <div class="dropdown-menu" *ngIf="dropdownOpen">
+                    <div class="dropdown-item" *ngFor="let s of spaces" (click)="selectSpace(s.id)">
+                        {{ s.name }}
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown-overlay" *ngIf="dropdownOpen" (click)="toggleDropdown()"></div>
+        </div>
+
+        <div class="row">
+            <div class="field">
+                <label>Desde</label>
+                <input type="date" [(ngModel)]="dateStart">
+            </div>
+            <div class="field">
+                <label>Hasta</label>
+                <input type="date" [(ngModel)]="dateEnd">
+            </div>
+        </div>
+
+        <button class="btn-consultar" (click)="consultar()" [disabled]="isLoading">
+            {{ isLoading ? 'Buscando...' : 'Consultar' }}
+        </button>
+    </section>
+
+    <div class="stats-summary" *ngIf="hasConsulted && !isLoading">
+        <div class="stat highlight">
+            <span class="val">{{ stats.resHours }}h</span>
+            <span class="lbl">Total Horas Reservadas</span>
+        </div>
+    </div>
+
+    <section class="results-section" *ngIf="hasConsulted && !isLoading">
+        <div class="section-title">
+            <h3>Registros encontrados</h3>
+            <span class="count-badge">{{ groupedRecords.length }}</span>
+        </div>
+
+        <div class="records-list">
+            <div class="res-card" *ngFor="let res of groupedRecords" [ngClass]="res.status">
+                <div class="card-header">
+                    <span class="user">{{ res.user }}</span>
+                    <span class="date">{{ res.date | date:'dd/MM/yyyy' }}</span>
+                </div>
+                
+                <div class="card-body">
+                    <div class="info">
+                        <span class="icon">📍</span> 
+                        <b>Horario:</b> {{ res.timeRange }}
+                    </div>
+                    
+                    <div class="info companions-box">
+                        <span class="icon">👥</span> 
+                        <b>Acompañantes:</b>
+                        <span class="comp-list" *ngIf="res.companions && res.companions.length > 0">
+                            {{ res.companions.join(', ') }}
+                        </span>
+                        <span class="no-comp" *ngIf="!res.companions || res.companions.length === 0">
+                            Sin acompañantes
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <span class="status-tag">{{ res.status }}</span>
+                </div>
+            </div>
+
+            <div class="empty-state" *ngIf="groupedRecords.length === 0">
+                <div class="icon">📁</div>
+                <p>No se encontraron reservas en este periodo.</p>
+            </div>
+        </div>
+    </section>
+</div>

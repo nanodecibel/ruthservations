@@ -1,0 +1,49 @@
+<div class="login-container">
+  <div class="progress-container" *ngIf="loading">
+    <div class="progress-bar"></div>
+  </div>
+
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo-wrapper">
+        <img 
+          src="https://res.cloudinary.com/dmx9htwvq/image/upload/v1773606178/ruthServations_1_msota0.png" 
+          alt="Ruthservations Logo" 
+          class="main-logo"
+        >
+      </div>
+      <p class="subtitle">Gestión de horarios de laboratorios</p>
+    </div>
+
+    <div class="form-group">
+      <label>Correo institucional</label>
+      <input
+        type="email"
+        placeholder="usuario@correo.com"
+        [(ngModel)]="email"
+        [disabled]="loading"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input
+        type="password"
+        placeholder="••••••••"
+        [(ngModel)]="password"
+        (keyup.enter)="login()"
+        [disabled]="loading"
+      />
+    </div>
+
+    <button (click)="login()" [disabled]="loading" [class.loading]="loading">
+      <span *ngIf="!loading">Ingresar</span>
+      <span *ngIf="loading">Verificando...</span>
+    </button>
+
+    <div class="footer-info">
+      <p>Control de Reservas v2.0</p>
+      <p class="brand">Powered by <span>[n]dB</span></p>
+    </div>
+  </div>
+</div>

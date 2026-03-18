@@ -1,0 +1,83 @@
+<div class="admin-container">
+  <div class="toast" *ngIf="toast.show" [ngClass]="toast.type">
+    <div class="toast-content">
+      <span class="toast-icon">{{ toast.type === 'success' ? '✅' : '❌' }}</span>
+      <span class="toast-message">{{ toast.message }}</span>
+    </div>
+  </div>
+
+  <div class="progress-container" *ngIf="loading">
+    <div class="progress-bar"></div>
+  </div>
+
+  <header class="admin-header">
+    <div class="header-content">
+      <h1>Administración</h1>
+    </div>
+    
+    <div class="tabs">
+      <button (click)="setView('pending')" [class.active]="currentMode === 'pending'">
+        Pendientes
+      </button>
+      <button (click)="setView('approved')" [class.active]="currentMode === 'approved'">
+        Aprobadas
+      </button>
+    </div>
+  </header>
+
+  <div class="empty-state" *ngIf="!loading && groupedReservations.length === 0">
+    <div class="icon">✨</div>
+    <p>No hay reservas en esta categoría.</p>
+  </div>
+
+  <div class="grid" *ngIf="groupedReservations.length > 0">
+    <div class="card" *ngFor="let r of groupedReservations" [class.pending-card]="currentMode === 'pending'">
+      <div class="card-body">
+        <div class="space-info">
+          <span class="date-tag">{{ r.date | date:'EEEE, d MMMM' }}</span>
+          <h3>{{ r.space }}</h3>
+        </div>
+
+        <div class="info-list">
+          <div class="item">
+            <span class="label">Estudiante</span>
+            <span class="value">{{ r.user }}</span>
+          </div>
+          <div class="item">
+            <span class="label">Horario</span>
+            <span class="value">{{ r.labels.join(' | ') }}</span>
+          </div>
+          <div class="item" *ngIf="r.companions?.length">
+            <span class="label">Acompañantes</span>
+            <span class="value">{{ r.companions.join(', ') }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <ng-container *ngIf="currentMode === 'pending'">
+          <button class="btn-approve" (click)="approve(r)">Aprobar</button>
+          <button class="btn-reject" (click)="openConfirm(r, 'reject')">Rechazar</button>
+        </ng-container>
+
+        <ng-container *ngIf="currentMode === 'approved'">
+          <button class="btn-finish" (click)="finish(r)">Finalizar</button>
+          <button class="btn-abandon" (click)="openConfirm(r, 'abandon')">Abandonada</button>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showConfirmModal">
+    <div class="custom-modal">
+      <h3>{{ modalConfig.title }}</h3>
+      <p>{{ modalConfig.message }}</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="showConfirmModal = false">Cancelar</button>
+        <button [class]="modalConfig.isDanger ? 'btn-danger' : 'btn-primary'" (click)="confirmAction()">
+          {{ modalConfig.confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

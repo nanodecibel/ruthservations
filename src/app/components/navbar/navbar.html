@@ -1,0 +1,46 @@
+<header class="navbar">
+  <div class="logo">
+    <span class="brand-ruth">RUTH</span><span class="brand-servations">SERVATIONS</span>
+  </div>
+
+  <button class="menu-btn" (click)="toggleMenu()" aria-label="Abrir menú">
+    ☰
+  </button>
+
+  <div class="overlay" [class.active]="menuOpen" (click)="closeMenu()"></div>
+
+  <nav [class.open]="menuOpen">
+    <div class="nav-header">
+      <span class="nav-title">Menú</span>
+      <button class="close-btn" (click)="closeMenu()">✕</button>
+    </div>
+
+    <div class="nav-links">
+      <a routerLink="/reservations" routerLinkActive="active" (click)="closeMenu()">
+        <span class="icon"></span> Reservar
+      </a>
+
+      <a routerLink="/my-reservations" routerLinkActive="active" (click)="closeMenu()">
+        <span class="icon"></span> Mis reservas
+      </a>
+
+      <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" (click)="closeMenu()">
+        <span class="icon"></span> Gestión de Espacios
+      </a>
+
+      <a *ngIf="isAdmin" routerLink="/schedules" routerLinkActive="active" (click)="closeMenu()">
+        <span class="icon"></span> Planificación
+      </a>
+
+      <a *ngIf="isAdmin" routerLink="/analytics" routerLinkActive="active" (click)="closeMenu()">
+        <span class="icon"></span> Reportes y Estadísticas
+      </a>
+
+      <div class="spacer"></div>
+
+      <button class="logout" (click)="logout()" *ngIf="userLogged">
+        <span class="icon"></span> Logout
+      </button>
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,271 @@
+// Paleta de colores profesional
+$primary: #2563eb;
+$primary-light: #dbeafe;
+$text-dark: #1e293b;
+$text-muted: #64748b;
+$border: #e2e8f0;
+$white: #ffffff;
+$bg-main: #f1f5f9;
+
+.consultor-container {
+  padding: 16px;
+  background: $bg-main;
+  min-height: 100vh;
+  box-sizing: border-box;
+  max-width: 600px;
+  margin: 0 auto;
+  
+  * { box-sizing: border-box; }
+}
+
+.header {
+  margin: 10px 0 24px 4px;
+  h1 { font-size: 1.5rem; font-weight: 900; color: $text-dark; margin: 0; letter-spacing: -0.5px; }
+  p { font-size: 0.85rem; color: $text-muted; margin-top: 4px; }
+}
+
+// PANEL DE BÚSQUEDA
+.search-panel {
+  background: $white; 
+  padding: 20px; 
+  border-radius: 24px; 
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px; 
+  border: 1px solid rgba($border, 0.5); 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px;
+
+  .field {
+    label { 
+      display: block; 
+      font-size: 0.7rem; 
+      font-weight: 800; 
+      color: $text-muted; 
+      text-transform: uppercase; 
+      margin-bottom: 8px; 
+      letter-spacing: 0.5px;
+    }
+    input { 
+      width: 100%; 
+      padding: 12px 16px; 
+      border: 1.5px solid $border; 
+      border-radius: 12px; 
+      font-size: 1rem; 
+      color: $text-dark; 
+      background: #f8fafc; 
+      outline: none;
+      transition: all 0.2s;
+      
+      &:focus { border-color: $primary; background: $white; box-shadow: 0 0 0 4px rgba($primary, 0.05); }
+    }
+  }
+
+  .row {
+    display: flex; 
+    gap: 12px;
+    .field { flex: 1; }
+    @media (max-width: 450px) { flex-direction: column; }
+  }
+
+  .btn-consultar {
+    width: 100%; 
+    padding: 16px; 
+    background: $primary; 
+    color: $white; 
+    border: none; 
+    border-radius: 14px;
+    font-weight: 700; 
+    font-size: 1rem; 
+    cursor: pointer; 
+    transition: all 0.2s;
+    
+    &:active { transform: scale(0.98); }
+    &:disabled { background: #cbd5e1; cursor: not-allowed; }
+  }
+}
+
+// DROPDOWN PERSONALIZADO
+.custom-dropdown {
+  position: relative;
+  
+  .dropdown-trigger {
+    width: 100%; 
+    height: 50px; 
+    padding: 0 16px; 
+    background: #f8fafc; 
+    border: 1.5px solid $border;
+    border-radius: 12px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    font-size: 1rem; 
+    color: $text-dark; 
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &.active { border-color: $primary; background: white; }
+    .chevron { font-size: 0.7rem; opacity: 0.5; }
+  }
+
+  .dropdown-menu {
+    position: absolute; 
+    top: 100%; 
+    left: 0; 
+    width: 100%; 
+    background: white; 
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+    z-index: 100; 
+    max-height: 200px; 
+    overflow-y: auto;
+    margin-top: 8px; 
+    border: 1px solid $border;
+    animation: slideIn 0.2s ease-out;
+
+    .dropdown-item { 
+      padding: 14px 16px; 
+      font-size: 0.95rem; 
+      color: $text-dark; 
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      
+      &:hover { background: #f8fafc; color: $primary; }
+      &:last-child { border-bottom: none; }
+    }
+  }
+}
+
+.dropdown-overlay { position: fixed; inset: 0; z-index: 90; }
+
+// ESTADÍSTICAS
+.stats-summary {
+  margin-bottom: 24px;
+  .stat {
+    background: white; 
+    padding: 20px; 
+    border-radius: 18px; 
+    text-align: center; 
+    border: 1px solid $border;
+    
+    .val { display: block; font-size: 1.5rem; font-weight: 900; color: $text-dark; }
+    .lbl { font-size: 0.7rem; color: $text-muted; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    
+    &.highlight { border-color: $primary; .val { color: $primary; } }
+  }
+}
+
+// SECCIÓN DE RESULTADOS
+.section-title {
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin: 0 0 16px 4px;
+    
+    h3 { font-size: 1rem; font-weight: 800; color: $text-dark; margin: 0; }
+    .count-badge { 
+      background: $text-dark; 
+      color: white; 
+      padding: 2px 8px; 
+      border-radius: 8px; 
+      font-size: 0.7rem; 
+      font-weight: 800; 
+    }
+}
+
+// TARJETAS DE RESERVA
+.res-card {
+  background: white; 
+  border-radius: 20px; 
+  padding: 18px; 
+  margin-bottom: 12px;
+  border: 1px solid $border; 
+  border-left: 6px solid #94a3b8;
+  transition: transform 0.2s;
+
+  &:active { transform: scale(0.99); }
+
+  .card-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start;
+    margin-bottom: 12px;
+    
+    .user { font-weight: 800; color: $text-dark; font-size: 1rem; }
+    .date { font-size: 0.75rem; color: $text-muted; font-weight: 600; }
+  }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info { 
+    font-size: 0.85rem; 
+    color: $text-muted; 
+    line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+
+    b { color: $text-dark; font-weight: 700; }
+  }
+
+  .companions-box {
+    padding-top: 4px;
+    border-top: 1px dashed $border;
+    margin-top: 4px;
+    
+    .comp-list { color: $text-dark; }
+    .no-comp { font-style: italic; opacity: 0.6; }
+  }
+
+  .card-footer {
+    margin-top: 12px;
+  }
+
+  .status-tag { 
+    display: inline-block; 
+    font-size: 0.65rem; 
+    font-weight: 800; 
+    padding: 4px 12px; 
+    border-radius: 8px; 
+    background: #f1f5f9; 
+    color: $text-muted; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  // Estados dinámicos
+  &.approved { 
+    border-left-color: #10b981; 
+    .status-tag { background: #ecfdf5; color: #10b981; }
+  }
+  &.pending { 
+    border-left-color: #f59e0b; 
+    .status-tag { background: #fffbeb; color: #f59e0b; }
+  }
+  &.finished { 
+    border-left-color: $primary; 
+    .status-tag { background: #eff6ff; color: $primary; }
+  }
+  &.rejected { 
+    border-left-color: #ef4444; 
+    .status-tag { background: #fef2f2; color: #ef4444; }
+  }
+}
+
+.empty-state { 
+  text-align: center; 
+  padding: 60px 20px; 
+  color: $text-muted; 
+  
+  .icon { font-size: 3rem; margin-bottom: 10px; display: block; opacity: 0.3; }
+  p { font-weight: 600; font-size: 0.9rem; }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

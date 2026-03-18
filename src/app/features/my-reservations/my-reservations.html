@@ -1,0 +1,71 @@
+<div class="progress-container" *ngIf="loading">
+    <div class="progress-bar"></div>
+</div>
+
+<div class="container">
+    <header class="header">
+        <h1>Mis Reservas</h1>
+        <p class="subtitle">Gestiona tus horarios programados</p>
+    </header>
+
+    <div *ngIf="!loading && groupedReservations.length === 0" class="empty-state">
+        <div class="icon">📅</div>
+        <h3>No tienes reservas activas</h3>
+        <p>Tus reservas aparecerán aquí agrupadas por solicitud.</p>
+    </div>
+
+    <div class="grid" *ngIf="!loading">
+        <div class="card" *ngFor="let res of groupedReservations" [class.approved]="res.status === 'approved'">
+            
+            <div class="status-badge" [class.pending]="res.status === 'pending'">
+                {{ res.status === 'pending' ? 'Pendiente' : 'Confirmada' }}
+            </div>
+
+            <div class="card-content">
+                <h2 class="space-title">{{ res.space_name }}</h2>
+
+                <div class="info-row">
+                    <span class="label">Fecha:</span>
+                    <span class="value">{{ res.date | date:"EEEE, d 'de' MMMM" }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="label">Horarios:</span>
+                    <span class="value">{{ res.time_labels.join(' | ') }}</span>
+                </div>
+
+                <div class="info-row companions-row" *ngIf="res.companions?.length">
+                    <span class="label">Acompañantes:</span>
+                    <span class="value">{{ res.companions.join(', ') }}</span>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <span class="created-at">Solicitada el {{ res.created_at | date:'shortDate' }}</span>
+                <button 
+                    class="btn-cancel" 
+                    *ngIf="canCancel(res.date)" 
+                    (click)="openCancelModal(res)">
+                    Cancelar Reserva
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showCancelModal" (click)="closeCancelModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-icon">⚠️</div>
+        <h3>¿Confirmar cancelación?</h3>
+        <p>Estás a punto de cancelar tu espacio en <strong>{{reservationToCancel?.space_name}}</strong> para el día {{reservationToCancel?.date | date:'dd/MM'}}. Esta acción liberará los bloques seleccionados.</p>
+        
+        <div class="modal-actions">
+            <button class="btn-secondary" (click)="closeCancelModal()" [disabled]="isCancelling">
+                No, volver
+            </button>
+            <button class="btn-danger" (click)="confirmCancellation()" [disabled]="isCancelling">
+                {{ isCancelling ? 'Cancelando...' : 'Sí, cancelar' }}
+            </button>
+        </div>
+    </div>
+</div>

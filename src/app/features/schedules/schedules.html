@@ -1,0 +1,104 @@
+<div class="schedules-container">
+    <div class="loading-overlay" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Cargando configuración...</p>
+    </div>
+
+    <header class="header">
+        <h1>Planificación</h1>
+        <p>Bloquea horarios durante varias semanas o meses</p>
+    </header>
+
+    <div class="setup-section">
+        <div class="field-group">
+            <label class="section-label">Laboratorio</label>
+            <div class="custom-dropdown" [class.active]="dropdownOpen">
+                <div class="dropdown-trigger" (click)="toggleDropdown()">
+                    <div class="selected-info">
+                        <span class="current-name">{{ getSelectedSpaceName() }}</span>
+                        <span class="current-location">{{ getSelectedSpaceLocation() }}</span>
+                    </div>
+                    <span class="arrow">▼</span>
+                </div>
+
+                <div class="dropdown-menu">
+                    <div class="option" *ngFor="let s of spaces" (click)="selectSpace(s.id)"
+                        [class.selected]="selectedSpaceId === s.id">
+                        <div class="opt-content">
+                            <span class="opt-name">{{ s.name }}</span>
+                            <span class="opt-location">{{ s.location }}</span>
+                        </div>
+                        <span class="check" *ngIf="selectedSpaceId === s.id">✓</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="field">
+                <label>Razón del bloqueo / Nombre Periodo</label>
+                <div class="input-wrapper">
+                    <input type="text" [(ngModel)]="scheduleTitle" placeholder="Ej: Semestre 2026-1, Mantenimiento...">
+                </div>
+            </div>
+            <div class="field">
+                <label>Fecha Inicio</label>
+                <div class="input-wrapper">
+                    <input type="date" [(ngModel)]="startDate">
+                </div>
+            </div>
+            <div class="field">
+                <label>Fecha Fin</label>
+                <div class="input-wrapper">
+                    <input type="date" [(ngModel)]="endDate">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-card">
+        <div class="grid-header">
+            <p>Toca los bloques para bloquear horarios</p>
+            <button class="btn-reset" (click)="resetCanvas()">Limpiar</button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th class="time-label">Horas</th>
+                        <th *ngFor="let d of days">{{ d.label }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let slot of slots">
+                        <td class="time-label">{{ slot.label }}</td>
+                        <td *ngFor="let d of days" (click)="toggleBlock(d.num, slot.order)"
+                            [class.selected]="isBlockSelected(d.num, slot.order)">
+                            <div class="cell-content">
+                                {{ isBlockSelected(d.num, slot.order) ? '🔒' : '' }}
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn-save" [disabled]="isSaving || isLoading" (click)="saveSchedule()">
+            <div class="btn-content">
+                <span *ngIf="!isSaving">Guardar Planificación</span>
+                <div class="loader-mini" *ngIf="isSaving"></div>
+                <span *ngIf="isSaving">Guardando datos...</span>
+            </div>
+        </button>
+    </div>
+
+    <div class="toast-container" *ngIf="toast.show" [ngClass]="toast.type">
+        <div class="toast-icon">
+            {{ toast.type === 'success' ? '✅' : '⚠️' }}
+        </div>
+        <div class="toast-message">{{ toast.message }}</div>
+    </div>
+</div>

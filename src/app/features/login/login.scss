@@ -1,0 +1,227 @@
+.login-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8fafc;
+  position: relative;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.progress-container {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 5px;
+  background: transparent;
+  z-index: 1000;
+  .progress-bar {
+    width: 100%; height: 100%;
+    background: #2563eb;
+    animation: loading 1.5s infinite linear;
+    transform-origin: 0% 50%;
+  }
+}
+
+@keyframes loading {
+  0% { transform: translateX(-100%) scaleX(0.2); }
+  50% { transform: translateX(-20%) scaleX(0.5); }
+  100% { transform: translateX(100%) scaleX(0.2); }
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: white;
+  padding: 40px;
+  border-radius: 28px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.03), 0 10px 10px -5px rgba(0, 0, 0, 0.01);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 8px;
+
+  .custom-logo {
+    font-family: 'Courier New', monospace;
+    font-size: 42px;
+    font-weight: 900;
+    color: #2563eb; // Ahora es azul como el nombre
+    margin-bottom: 5px;
+    letter-spacing: -2px;
+  }
+
+  h1 {
+    color: #2563eb;
+    font-size: 30px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -1.5px;
+  }
+
+  .subtitle {
+    color: #94a3b8; // Más tenue
+    font-size: 14px;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-left: 2px;
+  }
+
+  input {
+    padding: 14px;
+    border-radius: 12px;
+    border: 1.5px solid #f1f5f9;
+    font-size: 15px;
+    background: #f8fafc;
+    transition: all 0.2s;
+    color: #1e293b;
+
+    // ESTILO DE LOS PLACEHOLDERS Y PUNTITOS
+    &::placeholder {
+      color: #cbd5e1; // Gris muy suave/azulino
+    }
+
+    // Suavizar los puntos de la contraseña
+    &[type="password"] {
+      color: #94a3b8; // Hace los puntitos menos agresivos
+      letter-spacing: 2px;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: white;
+      color: #1e293b; // El texto real sí es oscuro para leer bien
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06);
+    }
+  }
+}
+
+button {
+  margin-top: 10px;
+  padding: 16px;
+  border: none;
+  border-radius: 14px;
+  background: #2563eb;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
+  }
+
+  &:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+  }
+}
+
+.footer-info {
+  margin-top: 15px;
+  text-align: center;
+  p {
+    font-size: 10px;
+    color: #cbd5e1;
+    margin: 2px 0;
+    letter-spacing: 0.5px;
+  }
+  .brand {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 10px;
+    span {
+      font-weight: 800;
+      color: #475569; // El [n]dB resalta ligeramente más que el "Powered by"
+      font-family: 'Courier New', monospace;
+    }
+  }
+}
+
+/* ... (mantenemos el container y la progress-bar igual) ... */
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: white;
+  padding: 40px;
+  border-radius: 28px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 8px;
+
+  .logo-wrapper {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .main-logo {
+      max-width: 350px; // Ajusta según el formato de tu logo
+      height: auto;
+      object-fit: contain;
+      // Filtro opcional por si el logo es azul oscuro y quieres que resalte
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.02));
+    }
+  }
+
+  .subtitle {
+    color: #94a3b8;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+}
+
+/* ... (resto de estilos de form-group, input y button se mantienen) ... */
+
+.footer-info {
+  margin-top: 15px;
+  text-align: center;
+  
+  p {
+    font-size: 10px;
+    color: #cbd5e1;
+    margin: 2px 0;
+    letter-spacing: 0.5px;
+  }
+
+  .brand {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 10px;
+    
+    span {
+      font-weight: 800;
+      color: #475569;
+      font-family: 'Courier New', monospace;
+      padding-left: 2px;
+    }
+  }
+}

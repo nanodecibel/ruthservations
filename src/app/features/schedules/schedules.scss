@@ -1,0 +1,151 @@
+$primary: #2563eb;
+$bg-app: #f8fafc;
+$text-main: #1e293b;
+$text-muted: #64748b;
+$border-color: #e2e8f0;
+$locked-color: #2563eb;
+
+.schedules-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 12px;
+  background: $bg-app;
+  min-height: 100vh;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.header {
+  margin-bottom: 20px;
+  h1 { font-size: 1.4rem; color: $text-main; font-weight: 800; margin: 0; }
+  p { color: $text-muted; font-size: 0.85rem; margin-top: 4px; }
+}
+
+// --- SETUP SECTION ---
+.setup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    .section-label { font-size: 0.7rem; font-weight: 800; color: $text-muted; text-transform: uppercase; }
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    @media (min-width: 600px) { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    label { font-size: 0.7rem; font-weight: 700; color: $text-muted; }
+    input {
+      width: 100%; padding: 12px; border: 2px solid $border-color; border-radius: 12px;
+      font-size: 0.9rem; color: $text-main; background: white; box-sizing: border-box;
+      &:focus { outline: none; border-color: $primary; }
+    }
+  }
+}
+
+// --- DROPDOWN ---
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+  .dropdown-trigger {
+    background: white; border: 2px solid $border-color; border-radius: 12px;
+    padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+    .selected-info {
+      display: flex; flex-direction: column;
+      .current-name { font-weight: 700; color: $text-main; font-size: 0.9rem; }
+      .current-location { font-size: 0.7rem; color: $text-muted; }
+    }
+    .arrow { font-size: 0.6rem; color: $text-muted; transition: 0.3s; }
+  }
+  &.active {
+    .dropdown-trigger { border-color: $primary; .arrow { transform: rotate(180deg); color: $primary; } }
+    .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(4px); }
+  }
+}
+
+.dropdown-menu {
+  position: absolute; top: 100%; left: 0; right: 0; background: white;
+  border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 1px solid $border-color;
+  z-index: 100; opacity: 0; visibility: hidden; transition: all 0.2s ease;
+  .option {
+    padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    &.selected { background: #eff6ff; .opt-name { color: $primary; } }
+    .opt-content { display: flex; flex-direction: column; .opt-name { font-size: 0.85rem; font-weight: 600; } }
+  }
+}
+
+// --- GRILLA ---
+.grid-card {
+  background: white; border-radius: 16px; border: 1px solid $border-color; overflow: hidden;
+  .grid-header {
+    padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;
+    p { margin: 0; color: $text-muted; font-size: 0.7rem; }
+    .btn-reset { background: #fee2e2; color: #ef4444; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; }
+  }
+}
+
+.schedule-table {
+  width: 100%; border-collapse: collapse; table-layout: fixed;
+  th, td { border: 1px solid $border-color; text-align: center; height: 38px; }
+  thead th { background: #f8fafc; color: $text-muted; font-size: 0.65rem; }
+  .time-label { width: 55px; font-size: 0.6rem; font-weight: 800; background: #f1f5f9; }
+  td:not(.time-label) {
+    cursor: pointer;
+    &.selected { background: $locked-color; .cell-content { color: white; animation: pop 0.2s ease; } }
+  }
+}
+
+// --- ACTIONS & LOADERS ---
+.actions {
+  margin-top: 24px;
+  .btn-save {
+    width: 100%; padding: 16px; background: $primary; color: white; border: none;
+    border-radius: 16px; font-weight: 800; transition: 0.2s;
+    .btn-content { display: flex; justify-content: center; align-items: center; gap: 10px; }
+    &:disabled { background: #cbd5e1; }
+  }
+}
+
+.loader-mini {
+  width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+  border-top: 2px solid white; border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+
+.loading-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.9);
+  z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
+  .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid $primary; border-radius: 50%; animation: spin 1s linear infinite; }
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes pop { 0% { transform: scale(0.6); } 100% { transform: scale(1); } }
+
+// --- TOAST (DESDE ABAJO) ---
+.toast-container {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  min-width: 280px; background: white; border-radius: 16px; padding: 14px 24px;
+  display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  z-index: 10000; border-left: 6px solid transparent;
+  animation: slideUpToast 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  &.success { border-left-color: #10b981; }
+  &.error { border-left-color: #ef4444; }
+  .toast-message { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+}
+
+@keyframes slideUpToast {
+  from { transform: translate(-50%, 100%); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}

@@ -1,0 +1,141 @@
+<div class="progress-container" *ngIf="isLoading || isSubmitting">
+    <div class="progress-bar"></div>
+</div>
+
+<div class="toast-notification" [class.show]="toast.show" [class.error]="toast.type === 'error'">
+    <div class="toast-content">
+        <span class="icon">{{ toast.type === 'success' ? '✓' : '✕' }}</span>
+        <span>{{ toast.message }}</span>
+    </div>
+</div>
+
+<div class="container">
+    <h1>Reservar Laboratorio</h1>
+
+    <div class="alert-warning" *ngIf="!config.system_enabled">
+        ⚠️ El sistema de reservas se encuentra temporalmente deshabilitado.
+    </div>
+
+    <div class="header-selection">
+        <label>Listado de laboratorios</label>
+        <div class="custom-dropdown" [class.active]="dropdownOpen">
+            <div class="dropdown-trigger" (click)="toggleDropdown()">
+                <div class="selected-info">
+                    <span class="current-name">{{ getSelectedSpaceName() }}</span>
+                    <span class="current-location">{{ getSelectedSpaceLocation() }}</span>
+                </div>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="dropdown-menu">
+                <div class="option" *ngFor="let s of spaces" (click)="selectSpace(s.id)"
+                    [class.selected]="selectedSpace === s.id">
+                    <div class="opt-content">
+                        <span class="opt-name">{{ s.name }}</span>
+                        <span class="opt-location">{{ s.location }}</span>
+                    </div>
+                    <span class="check" *ngIf="selectedSpace === s.id">✓</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content" *ngIf="spaces.length > 0">
+        <div class="week-nav">
+            <button (click)="prevWeek()" [disabled]="weekOffset===0">◀</button>
+            <span class="week-label">Semana {{weekOffset===0 ? 'Actual' : 'Siguiente'}}</span>
+            <button (click)="nextWeek()" [disabled]="weekOffset >= config.max_future_weeks_visible - 1">▶</button>
+        </div>
+
+        <div class="legend"
+            style="display: flex; gap: 15px; font-size: 0.7rem; margin: 10px 0; justify-content: center; font-family: sans-serif;">
+            <span><strong style="color: #d97706;">P</strong> = Pendiente</span>
+            <span><strong style="color: #94a3b8;">R</strong> = Reservado</span>
+            <span><strong style="color: #1e293b;">C</strong> = Clase</span>
+        </div>
+
+        <div class="grid" *ngIf="slots.length > 0">
+            <div class="corner"></div>
+            <div class="day-header" *ngFor="let d of days; let i=index">
+                <span class="day-name">{{d.label}}</span>
+                <span class="day-date">{{weekDates[i] | date:'dd/MM'}}</span>
+            </div>
+
+            <ng-container *ngFor="let slot of slots">
+                <div class="time-label">{{slot.label}}</div>
+                <div *ngFor="let d of days; let i = index" class="cell" [class.selected]="isSelected(d.num, slot)"
+                    [class.locked-pending]="isOccupied(i, slot.order) === 'pending'"
+                    [class.locked-approved]="isOccupied(i, slot.order) === 'approved'"
+                    [class.locked-fixed]="isOccupied(i, slot.order) === 'blocked'" (click)="toggleSlot(d.num, slot)">
+                    <span class="status-txt" *ngIf="isOccupied(i, slot.order)">
+                        {{ isOccupied(i, slot.order) === 'pending' ? 'P' : isOccupied(i, slot.order) === 'approved' ?
+                        'R' : 'C' }}
+                    </span>
+                </div>
+            </ng-container>
+        </div>
+
+        <div class="footer-form">
+            <div class="input-group">
+                <label>Acompañantes:</label>
+                <input type="text" placeholder="Nombres separados por comas (,)" [(ngModel)]="companionsText" />
+            </div>
+            <div class="summary-box" *ngIf="selectedSlots.length > 0">
+                <h3>Resumen ({{selectedSlots.length}} bloques):</h3>
+                <div class="tags">
+                    <span class="tag" *ngFor="let s of selectedSlots">{{s.date | date:'dd/MM'}} - {{s.label}}</span>
+                </div>
+            </div>
+            <div class="terms-container">
+                <label class="terms">
+                    <input type="checkbox" [(ngModel)]="acceptTerms">
+                    <span>Confirmo responsabilidad sobre el espacio y equipos.</span>
+                </label>
+            </div>
+            <button class="submit-btn" (click)="submitReservation()"
+                [disabled]="selectedSlots.length === 0 || !acceptTerms || isSubmitting || !config.system_enabled">
+                {{ isSubmitting ? 'Procesando...' : 'Enviar Reserva' }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" *ngIf="infoModal.show" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <header>
+            <h3>Detalle del Bloque</h3>
+            <button class="close-icon" (click)="closeModal()">✕</button>
+        </header>
+        <div class="modal-body">
+            <div class="info-row">
+                <span class="label">Horario:</span>
+                <span class="value">{{ infoModal.title }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Responsable:</span>
+                <span class="value highlight">{{ infoModal.user }}</span>
+            </div>
+            <div class="info-row" *ngIf="infoModal.reason">
+                <span class="label">Motivo/Estado:</span>
+                <span class="value">{{ infoModal.reason }}</span>
+            </div>
+            <div class="info-row" *ngIf="infoModal.companions.length > 0">
+                <span class="label">Acompañantes:</span>
+                <div class="value companions-tags">
+                    <span class="c-tag" *ngFor="let c of infoModal.companions">{{ c }}</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="modal-btn delete-btn" *ngIf="isAdmin && infoModal.status === 'blocked'"
+            [class.confirming]="isConfirmingDelete && !isSubmitting" [class.loading]="isSubmitting"
+            [disabled]="isSubmitting" (click)="deleteBlockedSchedule()">
+
+            <ng-container *ngIf="isSubmitting">Liberando espacio...</ng-container>
+            <ng-container *ngIf="!isSubmitting">
+                {{ isConfirmingDelete ? '¿Confirmar eliminación?' : 'Eliminar Bloqueo' }}
+            </ng-container>
+        </button>
+
+        <button class="modal-btn" (click)="closeModal()">Entendido</button>
+    </div>
+</div>
