@@ -22,10 +22,8 @@ export class Admin implements OnInit {
   groupedReservations: any[] = [];
   loading = true;
 
-  // TOAST unificado
   toast = { show: false, message: '', type: 'success' };
 
-  // MODAL de confirmación
   showConfirmModal = false;
   modalConfig = {
     title: '',
@@ -46,6 +44,7 @@ export class Admin implements OnInit {
     const usersRef = collection(this.firestore, 'universities/u1/users');
     const slotsRef = collection(this.firestore, 'universities/u1/time_slots');
     const resRef = collection(this.firestore, 'universities/u1/reservations');
+    const equipmentRef = collection(this.firestore, 'universities/u1/equipment'); // Para el cruce
 
     const spaces$ = collectionData(spacesRef, { idField: 'id' }).pipe(
       map(items => {
@@ -74,6 +73,15 @@ export class Admin implements OnInit {
       })
     );
 
+    // Mapeo de ID de equipo a Categoría (Type)
+    const equipmentTypeMap$ = collectionData(equipmentRef, { idField: 'id' }).pipe(
+      map(items => {
+        const m: any = {};
+        items.forEach((item: any) => m[item.id] = item.type || 'Otros');
+        return m;
+      })
+    );
+
     const reservations$ = this.viewMode$.pipe(
       switchMap(mode => {
         this.loading = true;
@@ -82,8 +90,8 @@ export class Admin implements OnInit {
       })
     );
 
-    combineLatest([spaces$, users$, labels$, reservations$]).subscribe({
-      next: ([spacesMap, usersMap, labelsMap, reservations]) => {
+    combineLatest([spaces$, users$, labels$, reservations$, equipmentTypeMap$]).subscribe({
+      next: ([spacesMap, usersMap, labelsMap, reservations, typeMap]) => {
         const groups: { [key: string]: any } = {};
 
         reservations.forEach((r: any) => {
@@ -92,6 +100,21 @@ export class Admin implements OnInit {
           const timeLabel = labelsMap[slotCode] || `Bloque ${slotCode}`;
 
           if (!groups[gid]) {
+            // Lógica de agrupación de equipos por categoría
+            const rawItems = r.requested_items || [];
+            const groupedItems: { [category: string]: any[] } = {};
+
+            rawItems.forEach((item: any) => {
+              const category = typeMap[item.id] || 'General';
+              if (!groupedItems[category]) groupedItems[category] = [];
+              groupedItems[category].push(item);
+            });
+
+            const equipmentCategories = Object.keys(groupedItems).map(cat => ({
+              name: cat,
+              list: groupedItems[cat]
+            }));
+
             groups[gid] = {
               groupId: gid,
               space: spacesMap[r.space_id] || 'Laboratorio',
@@ -99,10 +122,13 @@ export class Admin implements OnInit {
               date: r.date instanceof Timestamp ? r.date.toDate() : new Date(r.date),
               companions: r.companions || [],
               labels: [timeLabel],
-              ids: [r.id]
+              ids: [r.id],
+              equipment: equipmentCategories // Lista agrupada para el HTML
             };
           } else {
-            groups[gid].labels.push(timeLabel);
+            if (!groups[gid].labels.includes(timeLabel)) {
+                groups[gid].labels.push(timeLabel);
+            }
             groups[gid].ids.push(r.id);
           }
         });
@@ -119,14 +145,12 @@ export class Admin implements OnInit {
     });
   }
 
-  // Activación forzada de Toast
   triggerToast(message: string, type: 'success' | 'error' = 'success') {
     this.toast = { show: true, message, type };
-    this.cd.detectChanges(); // Pintar el toast de inmediato
-
+    this.cd.detectChanges();
     setTimeout(() => {
       this.toast.show = false;
-      this.cd.detectChanges(); // Ocultar el toast tras el tiempo
+      this.cd.detectChanges();
     }, 4000);
   }
 
@@ -155,16 +179,9 @@ export class Admin implements OnInit {
     }
   }
 
-  // ACCIONES DIRECTAS
-  approve(g: any) {
-    this.updateStatus(g, 'approved', 'Reserva aprobada correctamente');
-  }
+  approve(g: any) { this.updateStatus(g, 'approved', 'Reserva aprobada'); }
+  finish(g: any) { this.updateStatus(g, 'finished', 'Reserva finalizada'); }
 
-  finish(g: any) {
-    this.updateStatus(g, 'finished', 'Reserva finalizada con éxito');
-  }
-
-  // MODALES PERSONALIZADOS
   openConfirm(g: any, actionType: 'reject' | 'abandon') {
     if (actionType === 'reject') {
       this.modalConfig = {

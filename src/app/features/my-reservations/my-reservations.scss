@@ -91,30 +91,86 @@
   font-weight: 700;
   color: #1e293b;
   margin: 0 0 16px 0;
-  max-width: 65%; // Reducido un poco para no chocar con el badge
+  max-width: 65%; 
 }
 
 .info-row {
   display: flex;
-  flex-wrap: wrap; // ESTO EVITA QUE SE SUPERPONGAN
+  flex-wrap: wrap; 
   margin-bottom: 12px;
   align-items: flex-start;
 
   .label {
     font-weight: 500;
     color: #64748b;
-    min-width: 110px; // Aumentado para que "Acompañantes" quepa bien
+    min-width: 110px; 
     font-size: 0.9rem;
   }
 
   .value {
-    flex: 1; // Toma el espacio restante
-    min-width: 200px; // Si el espacio es menor a esto, salta de línea
+    flex: 1; 
+    min-width: 200px; 
     color: #1e293b;
     font-weight: 600;
     font-size: 0.9rem;
     line-height: 1.5;
-    word-break: break-word; // Evita que nombres largos rompan el layout
+    word-break: break-word; 
+  }
+}
+
+/* --- ESTILO SECCIÓN DE EQUIPOS --- */
+.equipment-section {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+
+  .equipment-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .category-group {
+    margin-bottom: 8px;
+    &:last-child { margin-bottom: 0; }
+
+    .category-name {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #3b82f6; // Un azul suave para diferenciar categorías
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .item-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      
+      li {
+        font-size: 0.85rem;
+        color: #1e293b;
+        padding-left: 8px;
+        border-left: 2px solid #e2e8f0;
+        margin-bottom: 2px;
+        display: flex;
+        gap: 6px;
+
+        .qty {
+          font-weight: 800;
+          color: #64748b;
+        }
+        .item-desc {
+          font-weight: 500;
+        }
+      }
+    }
   }
 }
 
@@ -157,15 +213,12 @@
   }
 }
 
-/* ... (Se mantiene todo lo anterior y se añade esto) */
-
-/* MODAL DE CONFIRMACIÓN - CORREGIDO PARA MÓVIL */
-/* MODAL DE CONFIRMACIÓN - SOLUCIÓN DEFINITIVA PARA MÓVIL */
+/* MODAL DE CONFIRMACIÓN */
 .modal-overlay {
   position: fixed;
   top: 0; 
   left: 0;
-  width: 100%; // Cambiado de 100vw a 100% para evitar desbordes
+  width: 100%; 
   height: 100%;
   background: rgba(15, 23, 42, 0.8); 
   backdrop-filter: blur(8px);
@@ -173,7 +226,7 @@
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  padding: 20px; // Margen de seguridad real
+  padding: 20px; 
   box-sizing: border-box;
 }
 
@@ -182,11 +235,11 @@
   border-radius: 20px;
   padding: 24px;
   width: 100%; 
-  max-width: 360px; // Reducido un poco para mayor seguridad
-  box-sizing: border-box; // Obligatorio para que el padding no ensanche el card
+  max-width: 360px; 
+  box-sizing: border-box; 
   text-align: center;
   position: relative;
-  overflow: hidden; // Evita que el contenido interno se salga
+  overflow: hidden; 
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease-out;
 
@@ -209,31 +262,31 @@
     line-height: 1.4;
     margin-bottom: 24px;
     font-size: 0.9rem;
-    word-wrap: break-word; // Corta palabras si son muy largas
+    word-wrap: break-word; 
     
     strong {
       color: #1e293b;
-      display: inline-block; // Ayuda al manejo de texto
+      display: inline-block; 
     }
   }
 }
 
 .modal-actions {
   display: flex;
-  flex-direction: column; // Columna para móvil siempre primero
+  flex-direction: column; 
   gap: 12px;
   width: 100%;
 
   button {
     display: block;
-    width: 100%; // Ocupa todo el ancho del modal
-    padding: 14px 10px; // Padding interno generoso
+    width: 100%; 
+    padding: 14px 10px; 
     border-radius: 12px;
     font-weight: 700;
     font-size: 0.9rem;
     cursor: pointer;
     border: none;
-    box-sizing: border-box; // Asegura que el botón no sea más ancho que el card
+    box-sizing: border-box; 
   }
 
   .btn-danger {
@@ -247,10 +300,9 @@
   }
 }
 
-/* Tablets y Desktop */
 @media (min-width: 480px) {
   .modal-actions {
-    flex-direction: row; // Solo aquí se ponen a los lados
+    flex-direction: row; 
     button { width: 50%; }
   }
 }

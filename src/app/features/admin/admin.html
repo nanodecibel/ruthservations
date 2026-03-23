@@ -52,6 +52,19 @@
             <span class="value">{{ r.companions.join(', ') }}</span>
           </div>
         </div>
+
+        <div class="admin-equipment-box" *ngIf="r.equipment?.length">
+          <p class="box-title">Equipos a preparar:</p>
+          <div class="category-block" *ngFor="let cat of r.equipment">
+            <span class="cat-label">{{ cat.name }}</span>
+            <ul class="equip-list">
+              <li *ngFor="let item of cat.list">
+                <span class="q">{{ item.quantity }}x</span> 
+                {{ item.brand }} {{ item.model }}
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       <div class="card-footer">

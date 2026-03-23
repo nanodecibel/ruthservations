@@ -1,17 +1,20 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Firestore, collection, collectionData, addDoc, doc, updateDoc, getDoc, query, where, getDocs, Timestamp } from '@angular/fire/firestore';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
+import { EquipmentPicker } from '../../components/equipment-picker/equipment-picker';
 
 @Component({
     selector: 'app-reservations',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, EquipmentPicker],
     templateUrl: './reservations.html',
     styleUrls: ['./reservations.scss']
 })
 export class Reservations implements OnInit {
+    @ViewChild('picker') equipmentPicker!: EquipmentPicker;
+
     spaces: any[] = [];
     slots: any[] = [];
     selectedSpace = '';
@@ -22,17 +25,12 @@ export class Reservations implements OnInit {
     isLoading = true;
     isSubmitting = false;
     isAdmin = false;
-    isConfirmingDelete = false; // Nuevo flag para evitar el alert nativo
+    isConfirmingDelete = false;
 
-    // Mapa para reservas: { 'fecha_slotIndex': 'status' }
     occupiedSlots: { [key: string]: string } = {};
-
-    // Almacén para horarios bloqueados semestrales
     blockedSchedules: any[] = [];
-
     toast = { show: false, message: '', type: 'success' };
 
-    // Modal de Información
     infoModal = {
         show: false,
         title: '',
@@ -75,21 +73,18 @@ export class Reservations implements OnInit {
         this.loadInitialData();
     }
 
+    private isInventorySpace(): boolean {
+        return this.selectedSpace === 'solo-equipos';
+    }
+
     private checkAdminStatus() {
         onAuthStateChanged(this.auth, async (user) => {
             if (user) {
                 try {
                     const userDocRef = doc(this.firestore, `universities/u1/users/${user.uid}`);
                     const userSnap = await getDoc(userDocRef);
-
-                    if (userSnap.exists()) {
-                        const userData = userSnap.data();
-                        this.isAdmin = userData['role'] === 'admin';
-                    } else {
-                        this.isAdmin = false;
-                    }
+                    this.isAdmin = userSnap.exists() && userSnap.data()['role'] === 'admin';
                 } catch (e) {
-                    console.error("Error verificando rol:", e);
                     this.isAdmin = false;
                 }
                 this.cd.detectChanges();
@@ -133,7 +128,6 @@ export class Reservations implements OnInit {
         if (!this.selectedSpace) return;
         this.isLoading = true;
         this.cd.detectChanges();
-
         try {
             await Promise.all([
                 this.loadOccupiedSlots(),
@@ -169,13 +163,9 @@ export class Reservations implements OnInit {
     async loadBlockedSchedules() {
         const blockedRef = collection(this.firestore, 'universities/u1/blocked_schedules');
         const q = query(blockedRef, where("space_id", "==", this.selectedSpace));
-
         try {
             const snap = await getDocs(q);
-            this.blockedSchedules = [];
-            snap.forEach(doc => {
-                this.blockedSchedules.push({ id: doc.id, ...doc.data() });
-            });
+            this.blockedSchedules = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (e) {
             console.error("Error cargando bloqueos:", e);
         }
@@ -205,12 +195,11 @@ export class Reservations implements OnInit {
         const day = now.getDay();
         const diff = (day === 0 ? -6 : 1 - day);
         monday.setDate(now.getDate() + diff + (this.weekOffset * 7));
-        this.weekDates = [];
-        for (let i = 0; i < 7; i++) {
+        this.weekDates = Array.from({ length: 7 }, (_, i) => {
             const d = new Date(monday);
             d.setDate(monday.getDate() + i);
-            this.weekDates.push(d);
-        }
+            return d;
+        });
     }
 
     getWeekNumber(d: Date): number {
@@ -241,39 +230,41 @@ export class Reservations implements OnInit {
     isOccupied(dayIndex: number, slotOrder: number): string | null {
         const date = this.weekDates[dayIndex];
         const dateStr = this.getLocalDataString(date);
-        const resStatus = this.occupiedSlots[`${dateStr}_${slotOrder}`];
-        if (resStatus) return resStatus;
+
+        if (!this.isInventorySpace()) {
+            const resStatus = this.occupiedSlots[`${dateStr}_${slotOrder}`];
+            if (resStatus) return resStatus;
+        }
 
         for (const block of this.blockedSchedules) {
             const start = block.start_date instanceof Timestamp ? block.start_date.toDate() : new Date(block.start_date);
             const end = block.end_date instanceof Timestamp ? block.end_date.toDate() : new Date(block.end_date);
             if (date >= start && date <= end) {
                 const dayNum = (dayIndex + 1).toString();
-                const blockedIndices = block.week_logic?.[dayNum] || [];
-                if (blockedIndices.includes(slotOrder)) return 'blocked';
+                if (block.week_logic?.[dayNum]?.includes(slotOrder)) return 'blocked';
             }
         }
         return null;
     }
 
-    async toggleSlot(day: number, slot: any) {
+async toggleSlot(day: number, slot: any) {
     const status = this.isOccupied(day - 1, slot.order);
     
-    if (status) {
+    // --- BYPASS SOLO-EQUIPOS / BLOQUEOS ---
+    if (status === 'blocked' || (status && !this.isInventorySpace())) {
         this.showInfo(day - 1, slot, status);
         return;
     }
 
-    // --- NUEVA REGLA: Validación de mismo día ---
+    // Validación de mismo día
     if (this.selectedSlots.length > 0) {
-        // Comparamos el día del nuevo slot con el día del primer slot ya seleccionado
         if (this.selectedSlots[0].day !== day) {
             this.triggerToast("Toda la reserva debe ser para el mismo día", "error");
             return;
         }
     }
-    // --------------------------------------------
 
+    // Lógica de fechas y horas
     const now = new Date();
     const slotDateBase = new Date(this.weekDates[day - 1]);
     let slotHour = 8;
@@ -286,6 +277,7 @@ export class Reservations implements OnInit {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const diffDays = Math.floor((new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate()).getTime() - today.getTime()) / 86400000);
 
+    // Validaciones de anticipación
     if (diffDays < 0) { this.triggerToast("No puedes reservar en días pasados", "error"); return; }
     if (diffDays < this.config.reservation_min_days_before) { this.triggerToast(`Debes reservar con al menos ${this.config.reservation_min_days_before} día(s) de anticipación`, "error"); return; }
     if (diffDays > this.config.reservation_max_days_before) { this.triggerToast(`Máximo ${this.config.reservation_max_days_before} días de anticipación`, "error"); return; }
@@ -294,21 +286,32 @@ export class Reservations implements OnInit {
     const index = this.selectedSlots.findIndex(s => s.slot_code === slotCode);
     
     if (index > -1) {
-        this.selectedSlots.splice(index, 1);
+        // --- CAMBIO PARA INMUTABILIDAD (QUITAR) ---
+        // Filtramos para crear un NUEVO array sin el slot deseleccionado
+        this.selectedSlots = this.selectedSlots.filter(s => s.slot_code !== slotCode);
     } else {
         if (this.selectedSlots.length >= this.config.max_blocks_per_reservation_user) {
             this.triggerToast(`Máximo ${this.config.max_blocks_per_reservation_user} bloques por reserva`, "error");
             return;
         }
-        this.selectedSlots.push({ day, slot_index: slot.order, slot_code: slotCode, label: slot.label, date: slotDate });
+        // --- CAMBIO PARA INMUTABILIDAD (AÑADIR) ---
+        // Creamos un NUEVO array con los existentes + el nuevo objeto
+        this.selectedSlots = [
+            ...this.selectedSlots, 
+            { day, slot_index: slot.order, slot_code: slotCode, label: slot.label, date: slotDate }
+        ];
     }
+
+    // Al asignar un nuevo array a this.selectedSlots, el [selectedSlots] del HTML
+    // detecta el cambio de referencia y dispara el ngOnChanges en el EquipmentPicker.
     this.cd.detectChanges();
 }
+
     async showInfo(dayIndex: number, slot: any, status: string) {
         const date = this.weekDates[dayIndex];
         const dateStr = this.getLocalDataString(date);
 
-        this.isConfirmingDelete = false; // Reset confirm state al abrir
+        this.isConfirmingDelete = false;
         this.infoModal = {
             show: true,
             title: `${slot.label} - ${this.days[dayIndex].label}`,
@@ -345,7 +348,6 @@ export class Reservations implements OnInit {
                 if (!snap.empty) {
                     const resData = snap.docs[0].data();
                     const userSnap = await getDoc(doc(this.firestore, `universities/u1/users/${resData['user_id']}`));
-
                     this.infoModal.user = userSnap.exists() ? userSnap.data()['name'] : "Usuario de Ruthservations";
                     this.infoModal.companions = resData['companions'] || [];
                     this.infoModal.reason = status === 'pending' ? "Esta reserva está esperando aprobación del administrador." : "Reserva confirmada.";
@@ -358,18 +360,13 @@ export class Reservations implements OnInit {
     }
 
     async deleteBlockedSchedule() {
-        // Si ya se está enviando o no hay ID, no hacer nada
         if (!this.isAdmin || !this.infoModal.blockId || this.isSubmitting) return;
-
-        // Paso 1: Confirmación visual en el botón
         if (!this.isConfirmingDelete) {
             this.isConfirmingDelete = true;
             this.cd.detectChanges();
             return;
         }
-
-        // Paso 2: Inicio de la operación
-        this.isSubmitting = true; // Activa barra de progreso y texto en botón
+        this.isSubmitting = true;
         this.cd.detectChanges();
 
         try {
@@ -383,40 +380,26 @@ export class Reservations implements OnInit {
                 const slotOrder = this.infoModal.currentSlotOrder;
 
                 if (weekLogic[dayKey]) {
-                    // Filtramos el slot específico
                     weekLogic[dayKey] = weekLogic[dayKey].filter((order: number) => order !== slotOrder);
-
-                    // Si el día quedó vacío, limpiamos la llave
-                    if (weekLogic[dayKey].length === 0) {
-                        delete weekLogic[dayKey];
-                    }
-
-                    // 1. Actualizamos en Firestore
+                    if (weekLogic[dayKey].length === 0) delete weekLogic[dayKey];
                     await updateDoc(docRef, { week_logic: weekLogic });
-
-                    // 2. Refrescamos la data de la cuadrícula (importante hacer el await aquí)
                     await this.loadOccupiedData();
-
-                    // 3. Feedback de éxito
                     this.triggerToast("Espacio liberado correctamente", "success");
-
-                    // 4. CIERRE DEFINITIVO: Cerramos el modal
                     this.closeModal();
                 }
             }
         } catch (e) {
-            console.error("Error al liberar espacio:", e);
             this.triggerToast("Error al modificar el bloqueo", "error");
         } finally {
-            // Paso 3: Apagar motores de carga (importante que esté en finally)
             this.isSubmitting = false;
             this.isConfirmingDelete = false;
             this.cd.detectChanges();
         }
     }
+
     closeModal() {
         this.infoModal.show = false;
-        this.isConfirmingDelete = false; // Reset de seguridad
+        this.isConfirmingDelete = false;
         this.cd.detectChanges();
     }
 
@@ -447,72 +430,105 @@ export class Reservations implements OnInit {
         return space ? space.location : '';
     }
 
+    // --- NUEVO: Obtener resumen para el HTML ---
+    getSelectedItemsSummary(): any[] {
+        let items: any[] = [];
+        if (this.equipmentPicker) {
+            this.equipmentPicker.categories.forEach(group => {
+                group.items.forEach(item => {
+                    if (item.selected_quantity > 0) {
+                        items.push({ name: `${item.brand} ${item.model}`, qty: item.selected_quantity });
+                    }
+                });
+            });
+        }
+        return items;
+    }
+
     async submitReservation() {
-        if (this.isSubmitting || !this.config.system_enabled || !this.selectedSpace || this.selectedSlots.length === 0 || !this.acceptTerms) return;
+    if (this.isSubmitting || !this.config.system_enabled || !this.selectedSpace || this.selectedSlots.length === 0 || !this.acceptTerms) return;
 
-        this.isSubmitting = true;
-        this.cd.detectChanges();
+    this.isSubmitting = true;
+    this.cd.detectChanges();
 
-        const user = this.auth.currentUser;
-        if (!user) {
-            this.triggerToast("Debes iniciar sesión", "error");
+    const user = this.auth.currentUser;
+    if (!user) {
+        this.triggerToast("Debes iniciar sesión", "error");
+        this.isSubmitting = false;
+        return;
+    }
+
+    try {
+        // --- EXTRACCIÓN DE EQUIPOS ---
+        const itemsToReserve: any[] = [];
+        
+        if (this.equipmentPicker && this.equipmentPicker.categories) {
+            console.log("Categorías encontradas en el picker:", this.equipmentPicker.categories);
+            
+            this.equipmentPicker.categories.forEach(group => {
+                group.items.forEach(item => {
+                    // Forzamos la lectura de la cantidad seleccionada
+                    if (item.selected_quantity > 0) {
+                        itemsToReserve.push({
+                            id: item.id,
+                            brand: item.brand,
+                            model: item.model,
+                            quantity: item.selected_quantity
+                        });
+                    }
+                });
+            });
+        }
+
+        console.log("Equipos listos para enviar:", itemsToReserve);
+
+        // Validación: Si el espacio es 'solo-equipos', no puede ir vacío
+        if (this.isInventorySpace() && itemsToReserve.length === 0) {
+            this.triggerToast("Debes seleccionar al menos un equipo", "error");
             this.isSubmitting = false;
             return;
         }
 
-        try {
-            const reservationsRef = collection(this.firestore, 'universities/u1/reservations');
-            const q = query(reservationsRef, where("user_id", "==", user.uid));
-            const snap = await getDocs(q);
+        const reservationsRef = collection(this.firestore, 'universities/u1/reservations');
+        const groupId = crypto.randomUUID();
+        const companionsArray = this.companionsText.split(',').map(x => x.trim()).filter(x => x.length > 0);
 
-            let blocksThisWeek = 0;
-            snap.forEach(d => {
-                const res = d.data();
-                if ((res['status'] === 'pending' || res['status'] === 'approved') && this.isSameWeek(res['date'] instanceof Timestamp ? res['date'].toDate() : new Date(res['date']), this.selectedSlots[0].date)) {
-                    blocksThisWeek++;
-                }
-            });
+        // --- BUCLE DE GUARDADO ---
+        for (const slot of this.selectedSlots) {
+            const reservationData = {
+                approval_time: null,
+                approved_by: null,
+                companions: companionsArray,
+                created_at: new Date(),
+                date: slot.date, // Timestamp
+                day: slot.day,
+                week_number: this.getWeekNumber(slot.date),
+                year: slot.date.getFullYear(),
+                reservation_group: groupId,
+                reservation_key: `${this.selectedSpace}_${this.getLocalDataString(slot.date)}_${slot.slot_index}`,
+                slot_code: slot.slot_code,
+                slot_index: slot.slot_index,
+                space_id: this.selectedSpace,
+                status: "pending",
+                user_id: user.uid,
+                requested_items: itemsToReserve // El array con los datos
+            };
 
-            if (blocksThisWeek + this.selectedSlots.length > this.config.max_blocks_user_week) {
-                this.triggerToast(`Límite semanal excedido (${this.config.max_blocks_user_week} bloques)`, "error");
-                this.isSubmitting = false;
-                this.cd.detectChanges();
-                return;
-            }
-
-            const groupId = crypto.randomUUID();
-            const companionsArray = this.companionsText.split(',').map(x => x.trim()).filter(x => x.length > 0);
-
-            for (const slot of this.selectedSlots) {
-                await addDoc(reservationsRef, {
-                    approval_time: null,
-                    approved_by: null,
-                    companions: companionsArray,
-                    created_at: new Date(),
-                    date: slot.date,
-                    day: slot.day,
-                    week_number: this.getWeekNumber(slot.date),
-                    year: slot.date.getFullYear(),
-                    reservation_group: groupId,
-                    reservation_key: `${this.selectedSpace}_${this.getLocalDataString(slot.date)}_${slot.slot_index}`,
-                    slot_code: slot.slot_code,
-                    slot_index: slot.slot_index,
-                    space_id: this.selectedSpace,
-                    status: "pending",
-                    user_id: user.uid
-                });
-            }
-
-            await this.loadOccupiedData();
-            this.resetForm();
-            this.triggerToast("¡Reserva enviada con éxito!", "success");
-        } catch (e) {
-            this.triggerToast("Hubo un error al procesar la reserva", "error");
-        } finally {
-            this.isSubmitting = false;
-            this.cd.detectChanges();
+            await addDoc(reservationsRef, reservationData);
         }
+
+        await this.loadOccupiedData();
+        this.resetForm();
+        this.triggerToast("¡Reserva enviada con éxito!", "success");
+
+    } catch (e) {
+        console.error("Error crítico en submitReservation:", e);
+        this.triggerToast("Hubo un error al procesar la reserva", "error");
+    } finally {
+        this.isSubmitting = false;
+        this.cd.detectChanges();
     }
+}
 
     private isSameWeek(d1: Date, d2: Date) {
         return this.getWeekNumber(d1) === this.getWeekNumber(d2) && d1.getFullYear() === d2.getFullYear();
@@ -522,6 +538,7 @@ export class Reservations implements OnInit {
         this.selectedSlots = [];
         this.companionsText = '';
         this.acceptTerms = false;
+        // Opcional: Podrías resetear el picker aquí si tienes un método reset en el hijo
         this.cd.detectChanges();
     }
 

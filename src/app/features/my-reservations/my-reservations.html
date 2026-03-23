@@ -38,6 +38,19 @@
                     <span class="label">Acompañantes:</span>
                     <span class="value">{{ res.companions.join(', ') }}</span>
                 </div>
+
+                <div class="equipment-section" *ngIf="res.equipment_categories?.length">
+                    <h3 class="equipment-title">Equipos Solicitados:</h3>
+                    <div class="category-group" *ngFor="let cat of res.equipment_categories">
+                        <span class="category-name">{{ cat.name }}</span>
+                        <ul class="item-list">
+                            <li *ngFor="let item of cat.list">
+                                <span class="qty">{{ item.quantity }}x</span> 
+                                <span class="item-desc">{{ item.brand }} {{ item.model }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
             <div class="card-footer">

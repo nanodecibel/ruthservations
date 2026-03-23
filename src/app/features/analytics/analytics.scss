@@ -264,6 +264,54 @@ $bg-main: #f1f5f9;
   .icon { font-size: 3rem; margin-bottom: 10px; display: block; opacity: 0.3; }
   p { font-weight: 600; font-size: 0.9rem; }
 }
+// ... (Se mantiene todo lo anterior y se añade esto al final)
+
+.equipment-audit-box {
+  margin-top: 12px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+
+  .audit-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: $text-muted;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .audit-category {
+    margin-bottom: 6px;
+    &:last-child { margin-bottom: 0; }
+
+    .cat-tag {
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: $primary;
+      display: inline-block;
+      margin-bottom: 2px;
+    }
+
+    .audit-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      li {
+        font-size: 0.8rem;
+        color: $text-dark;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding-left: 6px;
+        border-left: 2px solid #cbd5e1;
+
+        .q { font-weight: 800; color: $text-muted; }
+      }
+    }
+  }
+}
 
 @keyframes slideIn {
   from { opacity: 0; transform: translateY(-10px); }

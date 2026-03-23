@@ -73,17 +73,25 @@
                             Sin acompañantes
                         </span>
                     </div>
-                </div>
-                
-                <div class="card-footer">
+
+                    <div class="equipment-audit-box" *ngIf="res.equipment?.length">
+                        <p class="audit-label">Recursos Técnicos:</p>
+                        <div class="audit-category" *ngFor="let cat of res.equipment">
+                            <span class="cat-tag">{{ cat.name }}</span>
+                            <ul class="audit-list">
+                                <li *ngFor="let item of cat.items">
+                                    <span class="q">{{ item.quantity }}x</span> {{ item.brand }} {{ item.model }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div> <div class="card-footer">
                     <span class="status-tag">{{ res.status }}</span>
                 </div>
-            </div>
-
-            <div class="empty-state" *ngIf="groupedRecords.length === 0">
+            </div> <div class="empty-state" *ngIf="groupedRecords.length === 0">
                 <div class="icon">📁</div>
                 <p>No se encontraron reservas en este periodo.</p>
             </div>
         </div>
     </section>
-</div>
+</div> 

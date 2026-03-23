@@ -23,7 +23,6 @@ export class MyReservations implements OnInit {
   userId: string | null = null;
   cancellationMinHoursBefore = 24;
 
-  // Propiedades para el Modal de Confirmación
   showCancelModal = false;
   reservationToCancel: any = null;
   isCancelling = false;
@@ -59,6 +58,7 @@ export class MyReservations implements OnInit {
     const spacesRef = collection(this.firestore, 'universities/u1/spaces');
     const reservationsRef = collection(this.firestore, 'universities/u1/reservations');
     const slotsRef = collection(this.firestore, 'universities/u1/time_slots');
+    const equipmentRef = collection(this.firestore, 'universities/u1/equipment'); // Colección para el cruce
 
     const spaces$ = collectionData(spacesRef, { idField: 'id' }).pipe(
       map(spaces => {
@@ -76,6 +76,15 @@ export class MyReservations implements OnInit {
       })
     );
 
+    // Mapeo de ID de equipo a su Tipo (Categoría)
+    const equipmentTypeMap$ = collectionData(equipmentRef, { idField: 'id' }).pipe(
+      map(items => {
+        const map: any = {};
+        items.forEach((item: any) => map[item.id] = item.type || 'Otros');
+        return map;
+      })
+    );
+
     const reservations$ = collectionData(reservationsRef, { idField: 'id' }).pipe(
       map(res => res
         .filter((r: any) => r.user_id === this.userId && (r.status === 'pending' || r.status === 'approved'))
@@ -87,14 +96,30 @@ export class MyReservations implements OnInit {
       )
     );
 
-    combineLatest([spaces$, labels$, reservations$]).subscribe(([spacesMap, labelsMap, reservations]) => {
+    combineLatest([spaces$, labels$, reservations$, equipmentTypeMap$]).subscribe(([spacesMap, labelsMap, reservations, typeMap]) => {
       const groups: { [key: string]: any } = {};
 
       reservations.forEach((r: any) => {
         const groupId = r.reservation_group;
-        const timeLabel = labelsMap[r.slot_code.toString()] || `Bloque ${r.slot_code}`;
+        const timeLabel = labelsMap[r.slot_code?.toString()] || `Bloque ${r.slot_code}`;
 
         if (!groups[groupId]) {
+          // Procesar equipos solicitados y agruparlos por tipo usando el mapa de cruce
+          const rawItems = r.requested_items || [];
+          const groupedItems: { [category: string]: any[] } = {};
+
+          rawItems.forEach((item: any) => {
+            const category = typeMap[item.id] || 'General';
+            if (!groupedItems[category]) groupedItems[category] = [];
+            groupedItems[category].push(item);
+          });
+
+          // Convertimos el objeto de grupos en un array para el HTML
+          const itemsByCategory = Object.keys(groupedItems).map(cat => ({
+            name: cat,
+            list: groupedItems[cat]
+          }));
+
           groups[groupId] = {
             id: groupId,
             space_name: spacesMap[r.space_id] || 'Laboratorio',
@@ -103,17 +128,19 @@ export class MyReservations implements OnInit {
             created_at: r.created_at,
             companions: r.companions || [],
             time_labels: [timeLabel],
-            slot_ids: [r.id]
+            slot_ids: [r.id],
+            equipment_categories: itemsByCategory // Nueva propiedad para la vista
           };
         } else {
-          groups[groupId].time_labels.push(timeLabel);
+          // Si el grupo ya existe, solo añadimos el horario si no está repetido
+          if (!groups[groupId].time_labels.includes(timeLabel)) {
+            groups[groupId].time_labels.push(timeLabel);
+          }
           groups[groupId].slot_ids.push(r.id);
         }
       });
 
       this.groupedReservations = Object.values(groups).sort((a, b) => b.date.getTime() - a.date.getTime());
-      this.groupedReservations.forEach(g => g.time_labels.sort());
-
       this.loading = false;
       this.cd.detectChanges();
     });
@@ -125,10 +152,8 @@ export class MyReservations implements OnInit {
     return diffHours >= this.cancellationMinHoursBefore;
   }
 
-  // Abre el modal de confirmación
   openCancelModal(group: any) {
     if (!this.canCancel(group.date)) {
-      // Aquí podrías usar un Toast en lugar de alert en el futuro
       alert(`Solo puedes cancelar con ${this.cancellationMinHoursBefore}h de anticipación.`);
       return;
     }
@@ -136,28 +161,24 @@ export class MyReservations implements OnInit {
     this.showCancelModal = true;
   }
 
-  // Cierra el modal
   closeCancelModal() {
     this.showCancelModal = false;
     this.reservationToCancel = null;
   }
 
-  // Ejecuta la cancelación real
   async confirmCancellation() {
     if (!this.reservationToCancel || this.isCancelling) return;
-
     this.isCancelling = true;
     try {
       const promises = this.reservationToCancel.slot_ids.map((id: string) => {
         const ref = doc(this.firestore, `universities/u1/reservations/${id}`);
         return updateDoc(ref, { status: 'cancelled' });
       });
-      
       await Promise.all(promises);
       this.closeCancelModal();
     } catch (e) {
       console.error(e);
-      alert('Error al cancelar la reserva');
+      alert('Error al cancelar');
     } finally {
       this.isCancelling = false;
       this.cd.detectChanges();

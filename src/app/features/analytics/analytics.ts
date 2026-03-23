@@ -43,16 +43,19 @@ export class Analytics implements OnInit {
     this.cd.detectChanges();
 
     try {
-      const [usersSnap, resSnap, slotsSnap] = await Promise.all([
+      // 1. CARGA DE DATOS MAESTROS (Incluyendo Equipment para el cruce)
+      const [usersSnap, resSnap, slotsSnap, equipSnap] = await Promise.all([
         getDocs(collection(this.firestore, 'universities/u1/users')),
         getDocs(collection(this.firestore, 'universities/u1/reservations')),
-        getDocs(collection(this.firestore, 'universities/u1/time_slots'))
+        getDocs(collection(this.firestore, 'universities/u1/time_slots')),
+        getDocs(collection(this.firestore, 'universities/u1/equipment'))
       ]);
 
-      // MAPEO CORREGIDO: 
-      // Usamos el ID del documento (101, 102...) y extraemos el campo 'label'
       const usersMap = new Map(usersSnap.docs.map(d => [d.id, (d.data() as any).name]));
       const slotsMap = new Map(slotsSnap.docs.map(d => [d.id, (d.data() as any).label]));
+      
+      // Mapeo de ID de equipo a su Categoría (Type)
+      const equipTypeMap = new Map(equipSnap.docs.map(d => [d.id, (d.data() as any).type || 'Otros']));
       
       const allRes = resSnap.docs.map(d => ({ id: d.id, ...d.data() as any }));
 
@@ -70,19 +73,32 @@ export class Analytics implements OnInit {
       
       filteredRes.forEach(r => {
         const gid = r.reservation_group || r.id;
-        
-        // CORRECCIÓN AQUÍ: r.slot_code debe ser igual al ID del doc en time_slots
-        // Convertimos a string por si acaso en la reserva viene como número
         const slotId = String(r.slot_code); 
         const slotLabel = slotsMap.get(slotId) || `Horario ${slotId}`;
 
         if (!groups[gid]) {
+          // Lógica de agrupación de equipos por categoría
+          const rawItems = r.requested_items || [];
+          const catMap: { [key: string]: any[] } = {};
+
+          rawItems.forEach((item: any) => {
+            const category = equipTypeMap.get(item.id) || 'General';
+            if (!catMap[category]) catMap[category] = [];
+            catMap[category].push(item);
+          });
+
+          const equipmentCategories = Object.keys(catMap).map(catName => ({
+            name: catName,
+            items: catMap[catName]
+          }));
+
           groups[gid] = {
             user: usersMap.get(r.user_id) || 'Estudiante',
             date: r.date instanceof Timestamp ? r.date.toDate() : new Date(r.date),
             status: r.status || 'pending',
             slotsLabels: [slotLabel],
-            companions: r.companions || []
+            companions: r.companions || [],
+            equipment: equipmentCategories // Array formateado para el HTML
           };
         } else if (!groups[gid].slotsLabels.includes(slotLabel)) {
           groups[gid].slotsLabels.push(slotLabel);
@@ -90,7 +106,6 @@ export class Analytics implements OnInit {
       });
 
       this.groupedRecords = Object.values(groups).map((g: any) => {
-        // Ordenamos los labels para que el rango sea coherente
         const sortedLabels = g.slotsLabels.sort();
         let range = sortedLabels.join(', ');
         

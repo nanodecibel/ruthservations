@@ -1,0 +1,49 @@
+<div class="picker-container">
+  <div *ngFor="let group of categories" class="category-block">
+    
+    <div class="category-header" (click)="toggleCategory(group)" [class.active]="group.expanded">
+      <div class="header-main">
+        <span class="arrow" [class.rotated]="group.expanded">▸</span>
+        <span class="category-title">{{ group.type }}</span>
+      </div>
+      
+      <span class="category-badge" *ngIf="group.totalSelectedInCategory > 0">
+        {{ group.totalSelectedInCategory }}
+      </span>
+    </div>
+
+    <div class="category-content" *ngIf="group.expanded">
+      <div class="header-row">
+        <span class="col-name">EQUIPO</span>
+        <span class="col-action">SOLICITAR</span>
+        <span class="col-stock">DISPONIBLE</span>
+      </div>
+
+      <div class="equipment-list">
+        <div *ngFor="let item of group.items" class="equipment-row">
+          <div class="col-name">
+            <span class="brand">{{ item.brand }}</span>
+            <span class="model">{{ item.model }}</span>
+          </div>
+
+          <div class="col-action">
+            <div class="stepper">
+              <button (click)="remove(item, group)" [disabled]="item.selected_quantity === 0" class="step-btn">−</button>
+              <span class="current-qty" [class.has-value]="item.selected_quantity > 0">
+                {{ item.selected_quantity }}
+              </span>
+              <button (click)="add(item, group)" [disabled]="item.selected_quantity >= item.available_stock" class="step-btn">+</button>
+            </div>
+          </div>
+
+          <div class="col-stock">
+            <span class="stock-number" [class.low-stock]="item.available_stock <= 2">
+              {{ item.available_stock }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

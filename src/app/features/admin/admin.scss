@@ -205,6 +205,41 @@ $text-muted: #64748b;
   }
 }
 
+.admin-equipment-box {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f1f5f9; // Gris claro para distinguir
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+
+  .box-title {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #475569;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .category-block {
+    margin-bottom: 6px;
+    .cat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #2563eb; // Azul para las categorías
+      display: block;
+    }
+    .equip-list {
+      list-style: none;
+      padding: 0; margin: 0;
+      li {
+        font-size: 0.85rem;
+        color: #1e293b;
+        .q { font-weight: 800; color: #64748b; margin-right: 4px; }
+      }
+    }
+  }
+}
+
 .btn-secondary { background: #f1f5f9; color: $text-muted; }
 .btn-primary { background: $primary; color: white; }
 .btn-danger { background: $danger; color: white; }

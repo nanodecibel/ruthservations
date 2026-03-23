@@ -74,6 +74,18 @@
             </ng-container>
         </div>
 
+        <app-equipment-picker #picker [selectedSlots]="selectedSlots">
+        </app-equipment-picker>
+
+        <div *ngIf="getSelectedItemsSummary().length > 0" class="items-summary">
+            <p>Equipos adicionales:</p>
+            <ul>
+                <li *ngFor="let item of getSelectedItemsSummary()">
+                    {{item.qty}}x {{item.name}}
+                </li>
+            </ul>
+        </div>
+
         <div class="footer-form">
             <div class="input-group">
                 <label>Acompañantes:</label>
@@ -98,6 +110,7 @@
         </div>
     </div>
 </div>
+
 
 <div class="modal-overlay" *ngIf="infoModal.show" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
