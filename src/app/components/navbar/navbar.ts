@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router'; // Añadimos Router
 import { Auth, signOut, onAuthStateChanged } from '@angular/fire/auth';
 import { Firestore, doc, docData } from '@angular/fire/firestore';
 import { CommonModule } from '@angular/common';
@@ -16,11 +16,19 @@ export class Navbar {
   userLogged = false;
   isAdmin = false;
 
-  constructor(private auth: Auth, private firestore: Firestore) {
+  constructor(
+    private auth: Auth, 
+    private firestore: Firestore,
+    private router: Router // Inyectamos el router
+  ) {
     onAuthStateChanged(this.auth, user => {
       this.userLogged = !!user;
       if (!user) {
         this.isAdmin = false;
+        // Si no hay usuario y no estamos en login, redirigir
+        if (!window.location.hash.includes('/login')) {
+          this.router.navigate(['/login']);
+        }
         return;
       }
 
@@ -40,8 +48,14 @@ export class Navbar {
   }
 
   async logout() {
-    this.closeMenu();
-    await signOut(this.auth);
-    location.href = "/login";
+    try {
+      this.closeMenu();
+      await signOut(this.auth);
+      // Cambiamos location.href por la navegación de Angular
+      // Esto añadirá automáticamente el /#/login que necesitas
+      this.router.navigate(['/login']);
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
   }
 }
